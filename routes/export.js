@@ -8,16 +8,30 @@ const router = express.Router();
 
 router.get('/xlsx', requireAuth, (req, res) => {
   const { from, to } = req.query;
+  const lang = ['zh', 'en', 'id'].includes(req.query.lang) ? req.query.lang : 'zh';
   const where = [];
   const args = [];
   if (from) { where.push('e.date >= ?'); args.push(from); }
   if (to)   { where.push('e.date <= ?'); args.push(to); }
   const rows = db.prepare(
-    `SELECT e.date, e.purpose, e.income, e.expense, e.note, u.display_name recorder
-     FROM entries e LEFT JOIN users u ON u.id=e.recorder_id
+    `SELECT e.date, e.purpose, e.phrase_id, p.zh, p.en, p.id_text,
+            e.income, e.expense, e.note, u.display_name recorder
+     FROM entries e
+     LEFT JOIN users u ON u.id=e.recorder_id
+     LEFT JOIN phrases p ON p.id=e.phrase_id
      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
      ORDER BY e.date ASC, e.id ASC`
   ).all(...args);
+
+  // 分類：選定的常用片語以指定語言顯示（跨語言一致）；手動輸入則用原文字
+  const category = (r) => {
+    if (r.phrase_id) {
+      if (lang === 'en') return r.en || r.zh || r.id_text || '';
+      if (lang === 'id') return r.id_text || r.zh || r.en || '';
+      return r.zh || r.id_text || r.en || '';
+    }
+    return r.purpose || '';
+  };
 
   // 計算累計結餘
   let bal = 0;
@@ -25,7 +39,7 @@ router.get('/xlsx', requireAuth, (req, res) => {
     bal += (r.income || 0) - (r.expense || 0);
     return {
       日期: r.date,
-      用途: r.purpose,
+      用途: category(r),
       收入: r.income,
       支出: r.expense,
       結餘: bal,

@@ -45,8 +45,9 @@ router.get('/by-purpose', requireAuth, (req, res) => {
   let where = 'WHERE expense > 0', args = [];
   if (month) { where += ' AND date LIKE ?'; args = [`${month}%`]; }
   const rows = db.prepare(
-    `SELECT COALESCE(NULLIF(purpose,''),'—') purpose, SUM(expense) total
-     FROM entries ${where} GROUP BY purpose ORDER BY total DESC`
+    `SELECT COALESCE(p.zh, NULLIF(e.purpose,''), '—') purpose, SUM(e.expense) total
+     FROM entries e LEFT JOIN phrases p ON p.id=e.phrase_id
+     ${where} GROUP BY COALESCE(p.id, NULLIF(e.purpose,''), '—') ORDER BY total DESC`
   ).all(...args);
   res.json(rows);
 });

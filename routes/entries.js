@@ -47,13 +47,14 @@ router.get('/', requireAuth, (req, res) => {
 
 // 新增
 router.post('/', requireAuth, canWrite, upload.single('receipt'), (req, res) => {
-  const { date, purpose, income, expense, note } = req.body || {};
+  const { date, purpose, phrase_id, income, expense, note } = req.body || {};
   if (!date) return res.status(400).json({ error: 'date_required' });
+  const pid = phrase_id ? Number(phrase_id) : null;
   const receipt_path = req.file ? `uploads/${req.file.filename}` : null;
   const info = db.prepare(
-    `INSERT INTO entries(date,purpose,income,expense,note,receipt_path,recorder_id)
-     VALUES (?,?,?,?,?,?,?)`
-  ).run(date, purpose || '', num(income), num(expense), note || '', receipt_path, req.user.id);
+    `INSERT INTO entries(date,purpose,phrase_id,income,expense,note,receipt_path,recorder_id)
+     VALUES (?,?,?,?,?,?,?,?)`
+  ).run(date, purpose || '', pid, num(income), num(expense), note || '', receipt_path, req.user.id);
   res.json(db.prepare('SELECT * FROM entries WHERE id=?').get(info.lastInsertRowid));
 });
 
@@ -61,13 +62,15 @@ router.post('/', requireAuth, canWrite, upload.single('receipt'), (req, res) => 
 router.put('/:id', requireAuth, canWrite, upload.single('receipt'), (req, res) => {
   const row = db.prepare('SELECT * FROM entries WHERE id=?').get(req.params.id);
   if (!row) return res.status(404).json({ error: 'not_found' });
-  const { date, purpose, income, expense, note } = req.body || {};
+  const { date, purpose, phrase_id, income, expense, note } = req.body || {};
   let receipt_path = row.receipt_path;
   if (req.file) receipt_path = `uploads/${req.file.filename}`;
+  // phrase_id 有送就更新（空字串視為清除為手動輸入）
+  const pid = phrase_id === undefined ? row.phrase_id : (phrase_id ? Number(phrase_id) : null);
   db.prepare(
-    `UPDATE entries SET date=?,purpose=?,income=?,expense=?,note=?,receipt_path=? WHERE id=?`
+    `UPDATE entries SET date=?,purpose=?,phrase_id=?,income=?,expense=?,note=?,receipt_path=? WHERE id=?`
   ).run(
-    date || row.date, purpose ?? row.purpose,
+    date || row.date, purpose ?? row.purpose, pid,
     num(income), num(expense), note ?? row.note, receipt_path, req.params.id
   );
   res.json(db.prepare('SELECT * FROM entries WHERE id=?').get(req.params.id));

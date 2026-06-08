@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS entries (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
   date         TEXT NOT NULL,            -- YYYY-MM-DD
   purpose      TEXT NOT NULL DEFAULT '',
+  phrase_id    INTEGER REFERENCES phrases(id), -- 選定的分類（跨語言穩定）；手動輸入則為 NULL
   income       REAL NOT NULL DEFAULT 0,
   expense      REAL NOT NULL DEFAULT 0,
   note         TEXT NOT NULL DEFAULT '',
@@ -64,6 +65,12 @@ CREATE TABLE IF NOT EXISTS carryovers (
 );
 `);
 
+// ---- 遷移：舊資料庫補上 entries.phrase_id ----
+const entryCols = db.prepare('PRAGMA table_info(entries)').all().map((c) => c.name);
+if (!entryCols.includes('phrase_id')) {
+  db.exec('ALTER TABLE entries ADD COLUMN phrase_id INTEGER REFERENCES phrases(id)');
+}
+
 // ---- 種子資料 ----
 function seed() {
   const n = db.prepare('SELECT COUNT(*) c FROM users').get().c;
@@ -71,7 +78,7 @@ function seed() {
     const hash = bcrypt.hashSync('0912541540', 10);
     db.prepare(
       'INSERT INTO users(username,password_hash,display_name,role) VALUES (?,?,?,?)'
-    ).run('admin', hash, 'Admin', 'admin');
+    ).run('admin', hash, 'admin', 'admin');
   }
 
   const p = db.prepare('SELECT COUNT(*) c FROM phrases').get().c;

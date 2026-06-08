@@ -41,5 +41,5 @@ export const api = {
   carryovers: () => req('/api/settings/carryovers'),
   saveCarryover: (year, b) => req('/api/settings/carryovers/' + year, json('PUT', b)),
   delCarryover: (year) => req('/api/settings/carryovers/' + year, { method: 'DELETE' }),
-  exportUrl: (from, to) => '/api/export/xlsx?' + new URLSearchParams({ from, to }),
+  exportUrl: (from, to, lang) => '/api/export/xlsx?' + new URLSearchParams({ from, to, ...(lang ? { lang } : {}) }),
 };

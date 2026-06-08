@@ -13,27 +13,36 @@ router.get('/', adminOnly, (_req, res) => {
 
 router.post('/', adminOnly, (req, res) => {
   const { username, password, display_name, role } = req.body || {};
-  if (!username || !password) return res.status(400).json({ error: 'missing' });
+  // 暱稱即登入帳號（唯一）
+  const name = String(display_name || username || '').trim();
+  if (!name || !password) return res.status(400).json({ error: 'missing' });
   if (!['admin', 'editor', 'reader'].includes(role))
     return res.status(400).json({ error: 'bad_role' });
-  if (db.prepare('SELECT 1 FROM users WHERE username=?').get(username))
+  if (db.prepare('SELECT 1 FROM users WHERE username=?').get(name))
     return res.status(409).json({ error: 'exists' });
   const hash = bcrypt.hashSync(password, 10);
   const info = db.prepare(
     'INSERT INTO users(username,password_hash,display_name,role) VALUES (?,?,?,?)'
-  ).run(username.trim(), hash, display_name || username, role);
-  res.json({ id: info.lastInsertRowid, username, display_name: display_name || username, role });
+  ).run(name, hash, name, role);
+  res.json({ id: info.lastInsertRowid, username: name, display_name: name, role });
 });
 
-// 重設密碼 / 改角色
+// 改暱稱 / 重設密碼 / 改角色
 router.put('/:id', adminOnly, (req, res) => {
   const u = db.prepare('SELECT * FROM users WHERE id=?').get(req.params.id);
   if (!u) return res.status(404).json({ error: 'not_found' });
   const { password, role, display_name } = req.body || {};
+  if (display_name != null) {
+    const name = String(display_name).trim();
+    if (name && name !== u.username) {
+      if (db.prepare('SELECT 1 FROM users WHERE username=? AND id<>?').get(name, u.id))
+        return res.status(409).json({ error: 'exists' });
+      db.prepare('UPDATE users SET username=?, display_name=? WHERE id=?').run(name, name, u.id);
+    }
+  }
   if (password) db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(bcrypt.hashSync(password, 10), u.id);
   if (role && ['admin', 'editor', 'reader'].includes(role))
     db.prepare('UPDATE users SET role=? WHERE id=?').run(role, u.id);
-  if (display_name) db.prepare('UPDATE users SET display_name=? WHERE id=?').run(display_name, u.id);
   res.json({ ok: true });
 });
 

@@ -86,6 +86,10 @@ export async function addEntry(root, editId) {
   let editing = null;
   if (editId) editing = (await api.entries({})).find((e) => e.id === editId);
   const cur = state.currency;
+  // 選定的分類（連結片語）；手動輸入時為 null
+  const editPhrase = editing && editing.phrase_id ? phrases.find((p) => p.id === editing.phrase_id) : null;
+  let selectedPhraseId = editPhrase ? editPhrase.id : null;
+  const purposeVal = editing ? (editPhrase ? phraseLabel(editPhrase) : (editing.purpose || '')) : '';
   root.innerHTML = `<div class="view">
     <h1 class="view-title">${editing ? t('c.edit') : t('nav.add')}</h1>
     <div class="card">
@@ -93,9 +97,9 @@ export async function addEntry(root, editId) {
         <input class="input" type="date" id="f-date" value="${editing ? editing.date : todayStr()}"></div>
 
       <div class="field"><label>${t('c.purpose')}</label>
-        <input class="input" id="f-purpose" placeholder="${t('entry.purposePlaceholder')}" value="${editing ? esc(editing.purpose) : ''}">
+        <input class="input" id="f-purpose" placeholder="${t('entry.purposePlaceholder')}" value="${esc(purposeVal)}">
         <div class="chips" id="chips" style="margin-top:10px">
-          ${phrases.map((p) => `<button class="chip" type="button" data-p="${esc(phraseLabel(p))}">${esc(phraseLabel(p))}</button>`).join('')}
+          ${phrases.map((p) => `<button class="chip ${selectedPhraseId === p.id ? 'on' : ''}" type="button" data-id="${p.id}" data-p="${esc(phraseLabel(p))}">${esc(phraseLabel(p))}</button>`).join('')}
         </div></div>
 
       <div class="amount-grid">
@@ -136,9 +140,15 @@ export async function addEntry(root, editId) {
 
   root.querySelectorAll('.chip').forEach((c) => c.onclick = () => {
     root.querySelector('#f-purpose').value = c.dataset.p;
+    selectedPhraseId = Number(c.dataset.id);
     root.querySelectorAll('.chip').forEach((x) => x.classList.remove('on'));
     c.classList.add('on');
   });
+  // 手動修改文字 → 視為自訂分類，解除片語連結
+  root.querySelector('#f-purpose').oninput = () => {
+    selectedPhraseId = null;
+    root.querySelectorAll('.chip').forEach((x) => x.classList.remove('on'));
+  };
   const fileInput = root.querySelector('#f-receipt');
   fileInput.onchange = () => {
     if (fileInput.files[0]) root.querySelector('#f-receipt-label').textContent = fileInput.files[0].name;
@@ -149,6 +159,7 @@ export async function addEntry(root, editId) {
     const fd = new FormData();
     fd.append('date', root.querySelector('#f-date').value);
     fd.append('purpose', root.querySelector('#f-purpose').value);
+    fd.append('phrase_id', selectedPhraseId || '');
     fd.append('income', inc.value || 0);
     fd.append('expense', exp.value || 0);
     fd.append('note', root.querySelector('#f-note').value);
@@ -229,7 +240,7 @@ export async function report(root) {
 
   const out = root.querySelector('#r-out');
   const getRange = () => ({ from: root.querySelector('#r-from').value, to: root.querySelector('#r-to').value });
-  const updXls = () => { const { from, to } = getRange(); root.querySelector('#r-xls').href = api.exportUrl(from, to); };
+  const updXls = () => { const { from, to } = getRange(); root.querySelector('#r-xls').href = api.exportUrl(from, to, getLang()); };
   updXls();
   root.querySelector('#r-from').onchange = root.querySelector('#r-to').onchange = updXls;
   root.querySelector('#r-print').onclick = () => window.print();
@@ -322,7 +333,7 @@ async function renderUsers(box) {
   const roleName = (r) => t('role.' + r);
   box.innerHTML = us.map((u) => `<div class="row">
       <span class="iconbtn" style="background:var(--surface-2)">${ICON.user}</span>
-      <div class="grow"><b>${esc(u.display_name)}</b> <span class="muted">@${esc(u.username)}</span>
+      <div class="grow"><b>${esc(u.display_name)}</b>
         <div><span class="pill ${u.role}">${roleName(u.role)}</span></div></div>
       <button class="linkbtn" data-edu="${u.id}" data-name="${esc(u.display_name)}" data-role="${u.role}">${ICON.edit}</button>
       ${u.id !== state.user.id ? `<button class="iconbtn" data-du="${u.id}" style="color:var(--expense)">${ICON.trash}</button>` : ''}
@@ -340,19 +351,22 @@ function roleOptions(sel) {
 }
 function userModal(u, box) {
   const editing = !!u;
-  const { el, close } = modal(`<h3>${editing ? t('set.resetPwd') : t('set.addUser')}</h3>
-    ${editing ? '' : `<div class="field"><label>${t('login.username')}</label><input class="input" id="u-name"></div>`}
-    <div class="field"><label>${t('set.displayName')}</label><input class="input" id="u-disp" value="${editing ? esc(u.display_name) : ''}"></div>
+  const { el, close } = modal(`<h3>${editing ? t('set.editUser') : t('set.addUser')}</h3>
+    <div class="field"><label>${t('set.nickname')}</label><input class="input" id="u-disp" value="${editing ? esc(u.display_name) : ''}"></div>
     <div class="field"><label>${editing ? t('set.newPwd') + ' (' + t('c.optional') + ')' : t('login.password')}</label><input class="input" id="u-pwd" type="text"></div>
     <div class="field"><label>${t('set.role')}</label><select class="input" id="u-role">${roleOptions(editing ? u.role : 'editor')}</select></div>
     <button class="btn" id="u-ok">${t('c.save')}</button>`);
   el.querySelector('#u-ok').onclick = async () => {
     try {
       const role = el.querySelector('#u-role').value;
-      const display_name = el.querySelector('#u-disp').value;
+      const display_name = el.querySelector('#u-disp').value.trim();
       const password = el.querySelector('#u-pwd').value;
+      if (!display_name) return toast(t('set.nameRequired'));
       if (editing) await api.updateUser(u.id, { role, display_name, password: password || undefined });
-      else await api.addUser({ username: el.querySelector('#u-name').value, password, display_name, role });
+      else {
+        if (!password) return toast(t('set.pwdRequired'));
+        await api.addUser({ display_name, password, role });
+      }
       close(); renderUsers(box);
     } catch (e) { toast(e.message); }
   };
