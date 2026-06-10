@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: family-ledger
+    env: node
+    plan: starter
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    disk:
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        fromSecret: JWT_SECRET
+      - key: DATA_DIR
+        value: /data
+    autoDeploy: true
