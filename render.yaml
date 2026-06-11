@@ -1,18 +1,19 @@
 services:
   - type: web
-    name: family-ledger
-    env: node
-    plan: starter
-    branch: main
+    name: family-ledger-v2
+    runtime: node
     buildCommand: npm install
     startCommand: npm start
-    disk:
-      sizeGB: 1
     envVars:
+      - key: PORT
+        value: 3000
+      - key: JWT_SECRET
+        generateValue: true # Render 將會自動為您產生一個隨機安全金鑰
       - key: NODE_ENV
         value: production
-      - key: JWT_SECRET
-        fromSecret: JWT_SECRET
       - key: DATA_DIR
         value: /data
-    autoDeploy: true
+    disk:
+      name: ledger-data
+      mountPath: /data
+      sizeGB: 1
