@@ -5,8 +5,6 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
-      - key: PORT
-        value: 3000
       - key: JWT_SECRET
         generateValue: true # Render 將會自動為您產生一個隨機安全金鑰
       - key: NODE_ENV

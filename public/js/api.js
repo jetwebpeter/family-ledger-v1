@@ -1,6 +1,8 @@
 // api.js
+const API_BASE_URL = window.API_BASE_URL || '';
+
 async function req(url, opts = {}) {
-  const res = await fetch(url, { credentials: 'same-origin', ...opts });
+  const res = await fetch(API_BASE_URL + url, { credentials: 'same-origin', ...opts });
   if (res.status === 401) { window.dispatchEvent(new Event('unauthorized')); throw new Error('unauthorized'); }
   if (!res.ok) {
     let e = {}; try { e = await res.json(); } catch (_) {}
