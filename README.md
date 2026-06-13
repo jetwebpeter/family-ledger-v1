@@ -40,3 +40,4 @@ npm start          # 預設 http://localhost:3000
 2. 於支援 Node ≥22.5 的平台執行 `npm start`，或置於反向代理（Nginx／Caddy）後並啟用 HTTPS。
 3. 持久化 `DATA_DIR`（含資料庫與上傳附件）。
 # claude-b2b2c-tour
+# family-ledger-v1
