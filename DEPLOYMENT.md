@@ -14,7 +14,7 @@
 
 1. 將專案推到 GitHub（你已經有 remote）。
 2. 登入 Render，選擇 `New -> Web Service`。
-3. 連結到你的 GitHub repository `jetwebpeter/family-ledger-v2`。
+3. 連結到你的 GitHub repository `jetwebpeter/family-ledger-v1`。
 4. 選擇分支 `main`。
 5. Render 會自動讀取 `render.yaml`。
 6. 在 Render 的 Environment 頁面建立 secret：
