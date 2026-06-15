@@ -253,10 +253,10 @@ export async function report(root) {
     const asc = [...data].reverse(); let run = 0, ti = 0, te = 0;
     const trs = asc.map((e) => {
       run += (e.income || 0) - (e.expense || 0); ti += e.income || 0; te += e.expense || 0;
-      return `<tr><td>${e.date}</td><td style="text-align:left">${esc(e.purpose) || '—'}</td>
-        <td class="inc">${e.income ? money(e.income) : ''}</td>
-        <td class="exp">${e.expense ? money(e.expense) : ''}</td>
-        <td class="num">${money(run)}</td></tr>`;
+      return `<tr><td data-label="${t('c.date')}">${e.date}</td><td data-label="${t('c.purpose')}" style="text-align:left">${esc(e.purpose) || '—'}</td>
+        <td data-label="${t('c.income')}" class="inc">${e.income ? money(e.income) : ''}</td>
+        <td data-label="${t('c.expense')}" class="exp">${e.expense ? money(e.expense) : ''}</td>
+        <td data-label="${t('c.balance')}" class="num">${money(run)}</td></tr>`;
     }).join('');
     out.innerHTML = `<h3 style="margin-bottom:6px">${from} → ${to}</h3>
       <div class="stat-row" style="margin:10px 0 16px">
@@ -265,7 +265,7 @@ export async function report(root) {
       </div>
       <table class="rtable"><thead><tr><th>${t('c.date')}</th><th style="text-align:left">${t('c.purpose')}</th>
         <th>${t('c.income')}</th><th>${t('c.expense')}</th><th>${t('c.balance')}</th></tr></thead>
-        <tbody>${trs}<tr class="total"><td colspan="2">${t('report.net')}</td><td class="inc">${money(ti)}</td><td class="exp">${money(te)}</td><td class="num">${money(ti - te)}</td></tr></tbody></table>`;
+        <tbody>${trs}<tr class="total"><td data-label="${t('report.net')}" colspan="2">${t('report.net')}</td><td data-label="${t('c.income')}" class="inc">${money(ti)}</td><td data-label="${t('c.expense')}" class="exp">${money(te)}</td><td data-label="${t('c.balance')}" class="num">${money(ti - te)}</td></tr></tbody></table>`;
   };
 }
 
