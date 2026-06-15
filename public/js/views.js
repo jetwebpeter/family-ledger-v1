@@ -176,11 +176,13 @@ export async function addEntry(root, editId) {
 export async function list(root) {
   root.innerHTML = `<div class="view">
     <h1 class="view-title">${t('nav.list')}</h1>
-    <div class="card" style="padding:14px">
-      <input class="input" id="q" placeholder="${t('c.search')}…" style="margin-bottom:10px">
-      <input class="input" id="mon" type="month" value="">
+    <div class="card" style="padding:10px 14px">
+      <div style="display:flex; gap:10px;">
+        <input class="input" id="q" placeholder="${t('c.search')}…" style="flex:2">
+        <input class="input" id="mon" type="month" value="" style="flex:1; padding:10px 8px; font-size:0.9rem">
+      </div>
     </div>
-    <div class="card" id="rows"><div class="spin"></div></div>
+    <div class="card" id="rows" style="padding:8px 14px"><div class="spin"></div></div>
   </div>`;
   const rows = root.querySelector('#rows');
   async function load() {

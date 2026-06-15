@@ -210,44 +210,40 @@ textarea.input{resize:vertical;min-height:64px}
 
   .entry{
     display:grid;
-    grid-template-columns:42px minmax(0,1fr) auto;
-    align-items:start;
-    gap:8px 10px;
-    padding:15px 0;
+    grid-template-columns:36px minmax(0,1fr) auto;
+    grid-template-areas:
+      "ava mid amt"
+      "thumb mid actions";
+    align-items:center;
+    gap:4px 10px;
+    padding:10px 0;
   }
-  .entry .ava{grid-column:1;grid-row:1 / span 2}
-  .entry .mid{grid-column:2;grid-row:1 / span 2;align-self:center}
-  .entry .mid .p{font-size:.98rem;line-height:1.25}
-  .entry .mid .m{display:block;font-size:.75rem;line-height:1.55}
+  .entry .ava{grid-area:ava;width:36px;height:36px;font-size:.85rem}
+  .entry .mid{grid-area:mid;align-self:center}
+  .entry .mid .p{font-size:.92rem;line-height:1.25}
+  .entry .mid .m{display:block;font-size:.72rem;line-height:1.4}
   .entry .mid .m span{display:inline}
   .entry .mid .m span + span:before{content:" ";white-space:pre}
-  .entry .thumb{grid-column:3;grid-row:1;width:34px;height:34px;justify-self:end}
+  .entry .thumb{grid-area:thumb;width:34px;height:34px;justify-self:center}
   .entry .amt{
-    grid-column:3;
-    grid-row:1;
+    grid-area:amt;
     align-self:center;
-    min-width:max-content;
-    font-size:.98rem;
+    font-size:.95rem;
     line-height:1.15;
   }
-  .entry .thumb + .amt{grid-row:2}
-  .entry .amt small{font-size:.68rem;margin-top:3px}
+  .entry .amt small{font-size:.65rem;margin-top:2px}
   .swipe-actions{
-    grid-column:2 / -1;
-    grid-row:3;
+    grid-area:actions;
     justify-self:end;
     margin-left:0;
-    padding-top:2px;
+    gap:6px;
   }
-  .swipe-actions .iconbtn{width:42px;height:42px}
+  .swipe-actions .iconbtn{width:30px;height:30px;border-radius:8px}
 
-  #rows.card{padding:16px}
+  #rows.card{padding:8px 12px}
   #rows .entry{
-    grid-template-columns:42px minmax(0,1fr);
-    gap:8px 10px;
+    grid-template-columns:36px minmax(0,1fr) auto;
   }
-  #rows .entry .ava{grid-column:1;grid-row:1 / span 2}
-  #rows .entry .mid{grid-column:2;grid-row:1;align-self:start}
   #rows .entry .mid .p{white-space:normal;overflow:visible;text-overflow:clip;max-width:100%}
   #rows .entry .mid .m span{display:block}
   #rows .entry .mid .m span + span:before{content:""}
