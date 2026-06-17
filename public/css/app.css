@@ -241,25 +241,6 @@ textarea.input{resize:vertical;min-height:64px}
   .swipe-actions .iconbtn{width:30px;height:30px;border-radius:8px}
 
   #rows.card{padding:8px 12px}
-  #rows .entry{
-    grid-template-columns:36px minmax(0,1fr) auto;
-  }
-  #rows .entry .mid .p{white-space:normal;overflow:visible;text-overflow:clip;max-width:100%}
-  #rows .entry .mid .m span{display:block}
-  #rows .entry .mid .m span + span:before{content:""}
-  #rows .entry .amt{
-    grid-column:2;
-    grid-row:2;
-    justify-self:start;
-    align-self:center;
-    padding-top:0;
-  }
-  #rows .swipe-actions{
-    grid-column:2;
-    grid-row:2;
-    justify-self:end;
-    align-self:center;
-  }
 
   #r-out{padding:16px}
   #r-out .stat-row{gap:10px}
