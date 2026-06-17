@@ -3,4 +3,4 @@ data/
 .env
 *.log
 node_modules/
-w
+dir_data
